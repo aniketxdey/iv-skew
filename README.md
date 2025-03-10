@@ -130,7 +130,7 @@ final_IV_regression.ipynb
 1. Lee & Mykland (2008) - Jump detection framework
 2. Doran & Krieger (2010) - Delta-based skew metrics
 3. Bali & Hovakimian (2009) - Crash risk pricing
-4. Full citation list in [REFERENCES.md](REFERENCES.md)
+4. Full citation list in [PAPER.md](PAPER.md)
 
 ---
 
