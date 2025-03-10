@@ -5,7 +5,7 @@
 
 This repository implements a machine learning framework to predict market downturns using implied volatility (IV) skew metrics from options data. The methodology combines delta-based volatility skew decomposition with logistic regression, achieving **91% AUC** in forecasting next-day market declines.
 
-![ROC Curve](https://via.placeholder.com/600x400.png?text=ROC+Curve+(AUC+0.91)) <!-- Replace with actual plot from notebook -->
+
 
 ---
 
