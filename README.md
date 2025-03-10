@@ -100,9 +100,14 @@ model2 = sm.Logit(y2, X2_scaled).fit()
 | Metric       | Coefficient | P-value | VIF  |
 |--------------|-------------|---------|------|
 | **Δs_Pdo_o** | 3.195       | <0.001  | 2.18 |
+| **Δs_Pdo_a** | 3.226       | <0.001  | 2.18 |
 | Volume       | -2.168      | <0.001  | 2.07 |
 
-![Coefficient Plot](https://via.placeholder.com/600x300.png?text=Coefficient+Magnitudes) <!-- Replace with actual plot -->
+![Coefficient Plot for Put Skew Slope](https://github.com/user-attachments/assets/94fa1a3a-045b-436c-8f1c-97ed50267f26)
+
+![Coefficient Plot for Put Skew Curvature Metric](https://github.com/user-attachments/assets/82337252-d147-40d3-8ca6-4041e0a6a829)
+
+
 
 ### Performance Metrics
 - **AUC**: 0.91
@@ -130,7 +135,7 @@ final_IV_regression.ipynb
 1. Lee & Mykland (2008) - Jump detection framework
 2. Doran & Krieger (2010) - Delta-based skew metrics
 3. Bali & Hovakimian (2009) - Crash risk pricing
-4. Full citation list in [PAPER.md](PAPER.md)
+4. Full citation list in [final-paper.pdf](final-paper.pdf)
 
 ---
 
