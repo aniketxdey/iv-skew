@@ -1,4 +1,3 @@
-```markdown
 # Detecting Market Downturns From Implied Volatility Skew
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
