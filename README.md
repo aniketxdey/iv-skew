@@ -26,16 +26,6 @@ Methodology, results, and data described in [final-paper.pdf](final-paper.pdf). 
   - Curvature coefficient: **3.226** (p < 0.001)
 - **Model Performance**: Achieved **0.91 AUC** with 85% true positive rate at 10% false positive rate
 - **Volume Paradox**: Higher trading volume unexpectedly correlated with lower crash probability (-2.26 coefficient)
-
----
-
-## Installation
-```bash
-git clone https://github.com/yourusername/iv-skew-prediction.git
-cd iv-skew-prediction
-pip install -r requirements.txt
-```
-
 ---
 
 ## Data
