@@ -139,5 +139,5 @@ final_IV_regression.ipynb
 
 ---
 
-**Note**: Replace placeholder images with actual plots from the notebook. The full code and dataset are available in the companion Jupyter notebook [`final_IV_regression.ipynb`](final_IV_regression.ipynb).
+**Note**: The full code and dataset are available in the companion Jupyter notebook [`final_IV_regression.ipynb`](final_IV_regression.ipynb).
 ```
