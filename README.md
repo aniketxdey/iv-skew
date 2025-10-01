@@ -3,136 +3,83 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 
-This repository implements a machine learning framework to predict market downturns using implied volatility (IV) skew metrics from options data. The methodology combines delta-based volatility skew decomposition with logistic regression, achieving **91% AUC** in forecasting next-day market declines.
+This repository contains a production-style pipeline to detect next-day market downturns using delta-segmented implied-volatility (IV) skew features from QQQ options. The current implementation centers on an ensemble classifier built from logistic regression, random forest, gradient boosting, and a small PyTorch neural network.
 
-![ROC Curve](https://via.placeholder.com/600x400.png?text=ROC+Curve+(AUC+0.91)) <!-- Replace with actual plot from notebook -->
+**Performance on QQQ, 2020–2022:** AUC 0.91, Precision 0.89, Recall 0.72. Full ETL latency is typically < 50 ms on the provided sample for end-to-end pipeline.
+
+
+## hft_pipeline.py
+
+### 1) Skew & Controls (per quote-date × expiry)
+
+Put deltas are bucketed:
+
+* Deep OTM (Δ ≤ −0.25), OTM (−0.25 < Δ ≤ −0.15), ATM (−0.15 < Δ ≤ −0.05)
+
+Skew measures:
+
+* Slope: (\Delta s_{Pdo,o} = \overline{IV}*{\text{deep OTM put}} - \overline{IV}*{\text{OTM put}})
+* Curvature: (\Delta s_{Pdo,a} = \overline{IV}*{\text{deep OTM put}} - \overline{IV}*{\text{ATM put}})
+
+Additional controls (per group):
+
+* ATM IV (proxied by near-ATM puts)
+* Mean put bid-ask spread
+* Total put volume
+* DTE
+
+
+### 2) Jump Target (next-day downturn proxy)
+
+* Construct daily log returns from underlying close
+* Jump detection: Lee–Mykland-style T-stat on rolling 30-day vol; label jump if (T < -3)
+
+### 3) ETL & Feature Engineering
+
+* Merge skew features with market series
+* Delta-neutralization of skew vs. contemporaneous returns (30-day rolling beta)
+* STL decomposition of the skew time series (trend/seasonal/residual)
+* Volatility regimes via rolling std. terciles (low/medium/high) and transition flag
+* Interactions and momentum:
+  * ( \text{skew} \times \text{ATM_IV} )
+  * ( \text{curvature} \times \text{ATM_IV} )
+  * regime × skew, trend/residual ratio
+  * 5-day and 20-day skew momentum
+
+### 4) Ensemble Model 
+
+* Learners: logistic regression, random forest, gradient boosting, PyTorch NN
+* Train/validation split with `train_test_split` (stratified 70/30)
+* Standardization of inputs
+* Model weights proportional to each model’s validation AUC
+* Decision threshold chosen by maximizing ( \text{TPR} - \text{FPR} ) on the validation ROC
+
+**Class balancing:** build a balanced training frame of **1006** rows (**523** non-jumps, **483** jumps) via sampling. Random seeds are fixed at 42.
+
+### 5) Outputs
+
+* Per-model AUCs and ensemble weights
+* Ensemble AUC, Precision, Recall
+* Final downturn probability and decision for the most recent date
+* ETL latency in milliseconds tied for end-to-end sample on custom data batch
 
 ---
 
-## Table of Contents
-- [Key Findings](#key-findings)
-- [Installation](#installation)
-- [Data](#data)
-- [Methodology](#methodology)
-- [Usage](#usage)
-- [Results](#results)
-- [References](#references)
+## Quick Start
 
----
-
-## Key Findings
-- **IV Skew Predictiveness**: Both slope (DOTM-OTM IV) and curvature (DOTM-ATM IV) metrics significantly predict downturns:
-  - Slope coefficient: **3.195** (p < 0.001)
-  - Curvature coefficient: **3.226** (p < 0.001)
-- **Model Performance**: Achieved **0.91 AUC** with 85% true positive rate at 10% false positive rate
-- **Volume Paradox**: Higher trading volume unexpectedly correlated with lower crash probability (-2.26 coefficient)
-
----
-
-## Installation
 ```bash
 git clone https://github.com/yourusername/iv-skew-prediction.git
 cd iv-skew-prediction
 pip install -r requirements.txt
-```
-
----
-
-## Data
-### Dataset
-- **QQQ Options Data**: Daily put/call options for Nasdaq-100 ETF (Jan 2020 - Jun 2024)
-- Includes: IV, Greeks, bid/ask prices, volume, strike details
-- [Sample Data Structure](data/qqq_2020_2022.csv)
-
-### Preprocessing
-```python
-# Load and clean data
-df = pd.read_csv('/content/drive/MyDrive/Colab Notebooks/qqq_2020_2022.csv')
-df.columns = df.columns.str.strip()
-df['DTE'] = (df['EXPIRE_DATE'] - df['QUOTE_DATE']).dt.days
-
-# Convert numeric fields
-numeric_cols = ['C_BID', 'C_IV', 'P_BID', 'P_IV']
-for col in numeric_cols:
-    df[col] = pd.to_numeric(df[col], errors='coerce')
-```
-
----
-
-## Methodology
-### 1. Volatility Skew Calculation
-Delta-based segmentation of puts:
-```python
-def calculate_skew_measures(group):
-    put_cond = group['P_DELTA'] < 0
-    s_Pdo = group[put_cond & (group['P_DELTA'] <= -0.25)]['P_IV'].mean()
-    s_Po = group[put_cond & (group['P_DELTA'] > -0.25) & (group['P_DELTA'] <= -0.15)]['P_IV'].mean()
-    return pd.Series({
-        'Δs_Pdo_o': s_Pdo - s_Po,  # Slope
-        'Δs_Pdo_a': s_Pdo - s_Pa   # Curvature
-    })
-```
-
-### 2. Jump Detection
-Lee-Mykland nonparametric method:
-```python
-def detect_jumps(returns, window=30, critical=3.0):
-    local_vol = returns.rolling(window).std()
-    T_stats = returns / local_vol.shift(1)
-    return (T_stats < -critical).astype(int)
-```
-
-### 3. Logistic Regression
-```python
-# Model 1: Slope metric
-X1 = balanced_df[['Δs_Pdo_o', 'ATM_IV', 'BidAsk_Spread', 'Volume']]
-model1 = sm.Logit(y1, X1_scaled).fit()
-
-# Model 2: Curvature metric
-X2 = balanced_df[['Δs_Pdo_a', 'ATM_IV', 'BidAsk_Spread', 'Volume']]
-model2 = sm.Logit(y2, X2_scaled).fit()
-```
-
----
-
-## Results
-### Regression Output
-| Metric       | Coefficient | P-value | VIF  |
-|--------------|-------------|---------|------|
-| **Δs_Pdo_o** | 3.195       | <0.001  | 2.18 |
-| Volume       | -2.168      | <0.001  | 2.07 |
-
-![Coefficient Plot](https://via.placeholder.com/600x300.png?text=Coefficient+Magnitudes) <!-- Replace with actual plot -->
-
-### Performance Metrics
-- **AUC**: 0.91
-- **Recall**: 72%
-- **Precision**: 89%
-
----
-
-## Usage
-1. Mount Google Drive in Colab:
-```python
-from google.colab import drive
-drive.mount('/content/drive')
-```
-
-2. Run the pipeline:
-```python
-# Full analysis notebook:
-final_IV_regression.ipynb
+python "models/hft_pipeline.py"
 ```
 
 ---
 
 ## References
-1. Lee & Mykland (2008) - Jump detection framework
-2. Doran & Krieger (2010) - Delta-based skew metrics
-3. Bali & Hovakimian (2009) - Crash risk pricing
-4. Full citation list in [PAPER.md](PAPER.md)
 
----
+1. Lee, S. S., & Mykland, P. A. (2008). Jumps in financial markets: A new nonparametric test.
+2. Doran, J., & Krieger, K. (2010). Implications of implied volatility smirk for stock returns.
+3. Bali, T. G., & Hovakimian, A. (2009). Volatility spreads and expected stock returns.
 
-**Note**: Replace placeholder images with actual plots from the notebook. The full code and dataset are available in the companion Jupyter notebook [`final_IV_regression.ipynb`](final_IV_regression.ipynb).
-```
+If you use this code, please include a citation to this repository and the references above.
