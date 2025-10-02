@@ -13,7 +13,7 @@ Put deltas are bucketed:
 * Deep OTM (Δ ≤ −0.25), OTM (−0.25 < Δ ≤ −0.15), ATM (−0.15 < Δ ≤ −0.05)
 
 Skew measures:
-* Slope: (\Delta s_{Pdo,o} = \overline{IV}*{\text{deep OTM put}} - \overline{IV}*{\text{OTM put}})
+* Slope:(\Delta s_{Pdo,o = \overline{IV}*{\text{deep OTM put}} - \overline{IV}*{\text{OTM put}})
 * Curvature: (\Delta s_{Pdo,a} = \overline{IV}*{\text{deep OTM put}} - \overline{IV}*{\text{ATM put}})
 
 Additional controls (per group):
