@@ -34,8 +34,8 @@ Additional controls (per group):
 * STL decomposition of the skew time series (trend/seasonal/residual)
 * Volatility regimes via rolling std. terciles (low/medium/high) and transition flag
 * Interactions and momentum:
-  * $(\text{skew} \times \text{ATM\_IV})$
-  * $(\text{curvature} \times \text{ATM\_IV})$
+  * $(\text{skew} \times \text{ATM}\_IV)$
+  * $(\text{curvature} \times \text{ATM}\_IV)$
   * regime × skew, trend/residual ratio
   * 5-day and 20-day skew momentum
 
