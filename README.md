@@ -1,8 +1,8 @@
 # Implied Volatility Skew Analysis to Detect Market Downturns
 
- a production-style pipeline to detect next-day market downturns using delta-segmented implied-volatility (IV) skew features from QQQ options. current implementation centers on an ensemble classifier built from logistic regression, random forest, gradient boosting, and a small PyTorch neural network.
+A production-style pipeline to detect next-day market downturns using delta-segmented implied-volatility (IV) skew features from QQQ options. Current implementation centers on an ensemble classifier built from logistic regression, random forest, gradient boosting, and a small PyTorch neural network.
 
-**performance on QQQ, 2020–2022:** AUC 0.91, Precision 0.89, Recall 0.72. full ETL latency is typically <50 ms on the provided sample for end-to-end pipeline.
+**Performance on QQQ, 2020–2022:** AUC 0.91, Precision 0.89, Recall 0.72. full ETL latency is typically <50 ms on the provided sample for end-to-end pipeline.
 
 
 ##  hft_pipeline.py
