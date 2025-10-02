@@ -112,9 +112,7 @@ skew_df = df_filtered.groupby(['QUOTE_DATE', 'EXPIRE_DATE']).apply(
 
 print(f"Calculated skew for {len(skew_df):,} option groups")
 
-# ============================================================
 # Jump Detection
-# ============================================================
 
 market_df = df_filtered.groupby('QUOTE_DATE')['UNDERLYING_LAST'].first().reset_index()
 market_df.columns = ['Date', 'Close']
@@ -129,7 +127,6 @@ def detect_jumps(returns, window=30, critical=3.0):
 market_df['Jump'] = detect_jumps(market_df['log_ret'])
 
 print(f"Detected {market_df['Jump'].sum()} jump days")
-
 
 # ETL Pipeline
  
@@ -209,7 +206,6 @@ print(f"ETL completed in {etl_duration_ms:.2f}ms")
 
 # Feature Preparation & Class Balancing
 
-
 model_df = merged_data[['Jump', 'Δs_Pdo_o', 'Δs_Pdo_a', 'ATM_IV', 'BidAsk_Spread', 'Volume']].copy()
 model_df = model_df.dropna()
 model_df = model_df[
@@ -235,7 +231,6 @@ print(f"Balanced dataset: {len(balanced_df)} samples ({balanced_df['Jump'].sum()
 
 # Model 1: Logistic Regression (Slope)
 
-
 y = balanced_df['Jump'].copy()
 X1 = balanced_df[['Δs_Pdo_o', 'ATM_IV', 'BidAsk_Spread', 'Volume']].copy()
 
@@ -259,7 +254,6 @@ print(f"Model 1 (Slope) - AUC: {auc1:.3f}, Precision: {precision1:.3f}, Recall: 
 
 # Model 2: Logistic Regression (Curvature)
 
-
 X2 = balanced_df[['Δs_Pdo_a', 'ATM_IV', 'BidAsk_Spread', 'Volume']].copy()
 
 scaler2 = StandardScaler()
@@ -281,7 +275,6 @@ print(f"Model 2 (Curvature) - AUC: {auc2:.3f}, Precision: {precision2:.3f}, Reca
 
 
 # Ensemble Framework
-
 
 # PyTorch neural network
 class MarketDownturnNN(nn.Module):
@@ -406,8 +399,7 @@ ensemble_recall = recall_score(y_test, ensemble_pred_binary)
 
 print(f"Ensemble - AUC: {ensemble_auc:.3f}, Precision: {ensemble_precision:.3f}, Recall: {ensemble_recall:.3f}")
 
-# Final Market Prediction
-
+# Final Market Prediction Pipeline
 
 # Latest market conditions
 latest_data = merged_data.iloc[-1:][enhanced_features]
