@@ -13,8 +13,10 @@ Put deltas are bucketed:
 * Deep OTM (Δ ≤ −0.25), OTM (−0.25 < Δ ≤ −0.15), ATM (−0.15 < Δ ≤ −0.05)
 
 Skew measures:
-* Slope:(\Delta s_{Pdo,o = \overline{IV}*{\text{deep OTM put}} - \overline{IV}*{\text{OTM put}})
-* Curvature: (\Delta s_{Pdo,a} = \overline{IV}*{\text{deep OTM put}} - \overline{IV}*{\text{ATM put}})
+* **Slope:**  
+  $\Delta s_{Pdo,o} = \overline{IV}\cdot{\text{deep OTM put}} - \overline{IV}\cdot{\text{OTM put}}$
+* **Curvature:**  
+  $\Delta s_{Pdo,a} = \overline{IV}\cdot{\text{deep OTM put}} - \overline{IV}\cdot{\text{ATM put}}$
 
 Additional controls (per group):
 * ATM IV (proxied by near-ATM puts)
@@ -32,8 +34,8 @@ Additional controls (per group):
 * STL decomposition of the skew time series (trend/seasonal/residual)
 * Volatility regimes via rolling std. terciles (low/medium/high) and transition flag
 * Interactions and momentum:
-  * ( \text{skew} \times \text{ATM_IV} )
-  * ( \text{curvature} \times \text{ATM_IV} )
+  * $(\text{skew} \times \text{ATM\_IV})$
+  * $(\text{curvature} \times \text{ATM\_IV})$
   * regime × skew, trend/residual ratio
   * 5-day and 20-day skew momentum
 
