@@ -43,7 +43,7 @@ Additional controls (per group):
 * Learners: logistic regression, random forest, gradient boosting, PyTorch NN
 * Train/validation split stratified 70/30
 * Model weights proportional to each model’s validation AUC via vectorized operations
-* Decision threshold chosen by maximizing ( \text{TPR} - \text{FPR} ) on the validation ROC
+* Decision threshold chosen by maximizing ( \text{TPR} \text{FPR} ) on the validation ROC
 
 ### 5) Outputs
 * Per-model AUCs and ensemble weights
