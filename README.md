@@ -56,8 +56,8 @@ Additional controls (per group):
 ## Quick Start
 
 ```bash
-git clone https://github.com/yourusername/iv-skew-prediction.git
-cd iv-skew-prediction
+git clone https://github.com/yourusername/iv-skew.git
+cd iv-skew
 pip install -r requirements.txt
 python "models/hft_pipeline.py"
 ```
