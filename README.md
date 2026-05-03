@@ -1,4 +1,4 @@
-# Implied Volatility Skew Analysis to Detect Market Downturns
+# Detecting Downturns in Equity ETFs with Implied Volatility Analysis
 
 A HFT pipeline to detect next-day market downturns using delta-segmented implied volatility features. Backtested on QQQ options from Q1 2020 to Q2 2024, the current implementation centers on an ensemble classifier built from logistic regression, random forest, gradient boosting, and a small PyTorch neural network.
 
