@@ -25,16 +25,26 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
 import time
+import os
 import warnings
 warnings.filterwarnings('ignore')
 
 np.random.seed(42)
 torch.manual_seed(42)
 
+# Resolve paths relative to this file so the script runs from anywhere
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, os.pardir))
+DATA_PATH = os.path.join(SCRIPT_DIR, 'data', 'qqq_2020_2022.csv')
+ASSETS_DIR = os.path.join(REPO_ROOT, 'assets')
+os.makedirs(ASSETS_DIR, exist_ok=True)
+
+sns.set_theme(style='whitegrid', context='talk')
+
 # Data Loading & Preprocessing
 
 
-df = pd.read_csv('../data/qqq_2020_2022.csv')
+df = pd.read_csv(DATA_PATH)
 df.columns = df.columns.str.strip()
 
 # Rename columns
@@ -398,6 +408,93 @@ ensemble_precision = precision_score(y_test, ensemble_pred_binary)
 ensemble_recall = recall_score(y_test, ensemble_pred_binary)
 
 print(f"Ensemble - AUC: {ensemble_auc:.3f}, Precision: {ensemble_precision:.3f}, Recall: {ensemble_recall:.3f}")
+
+# Backtesting Plots
+#   ROC curves, ensemble weights, confusion matrix, feature importance, skew-vs-jumps
+#   All figures saved to assets/ for the README.
+
+from sklearn.metrics import confusion_matrix
+
+# 1. ROC curves — per base learner + ensemble
+fig, ax = plt.subplots(figsize=(9, 7))
+for name, pred in ensemble_predictions.items():
+    fpr_m, tpr_m, _ = roc_curve(y_test, pred)
+    ax.plot(fpr_m, tpr_m, linewidth=2, alpha=0.8,
+            label=f"{name.replace('_', ' ').title()} (AUC = {ensemble_performance[name]:.3f})")
+ax.plot(fpr_ens, tpr_ens, color='black', linewidth=3,
+        label=f"Ensemble (AUC = {ensemble_auc:.3f})")
+ax.plot([0, 1], [0, 1], color='gray', linestyle='--', linewidth=1.5, alpha=0.7)
+ax.set_xlabel('False Positive Rate')
+ax.set_ylabel('True Positive Rate')
+ax.set_title('ROC Curves — QQQ Downturn Detection (Q1 2020 – Q4 2022)')
+ax.legend(loc='lower right', fontsize=11)
+plt.tight_layout()
+plt.savefig(os.path.join(ASSETS_DIR, 'roc_curves.png'), dpi=150, bbox_inches='tight')
+plt.close(fig)
+
+# 2. Ensemble weights
+fig, ax = plt.subplots(figsize=(9, 5))
+weight_items = sorted(ensemble_weights.items(), key=lambda kv: kv[1], reverse=True)
+names = [k.replace('_', ' ').title() for k, _ in weight_items]
+values = [v for _, v in weight_items]
+bars = ax.barh(names, values, color=sns.color_palette('viridis', len(values)))
+for bar, v in zip(bars, values):
+    ax.text(v + 0.005, bar.get_y() + bar.get_height() / 2,
+            f'{v:.3f}', va='center', fontsize=11)
+ax.set_xlabel('AUC-proportional weight')
+ax.set_title('Ensemble Weights (validation-AUC normalized)')
+ax.set_xlim(0, max(values) * 1.15)
+plt.tight_layout()
+plt.savefig(os.path.join(ASSETS_DIR, 'ensemble_weights.png'), dpi=150, bbox_inches='tight')
+plt.close(fig)
+
+# 3. Confusion matrix — ensemble @ chosen threshold
+cm = confusion_matrix(y_test, ensemble_pred_binary)
+fig, ax = plt.subplots(figsize=(6.5, 5.5))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False,
+            xticklabels=['Normal', 'Downturn'],
+            yticklabels=['Normal', 'Downturn'], ax=ax,
+            annot_kws={'size': 18})
+ax.set_xlabel('Predicted')
+ax.set_ylabel('Actual')
+ax.set_title(f'Ensemble Confusion Matrix  (τ = {optimal_threshold:.2f})')
+plt.tight_layout()
+plt.savefig(os.path.join(ASSETS_DIR, 'confusion_matrix.png'), dpi=150, bbox_inches='tight')
+plt.close(fig)
+
+# 4. Feature importance — averaged RF + GB (both expose feature_importances_)
+importances = (rf_model.feature_importances_ + gb_model.feature_importances_) / 2
+feat_series = pd.Series(importances, index=enhanced_features).sort_values(ascending=True)
+fig, ax = plt.subplots(figsize=(10, 8))
+feat_series.plot.barh(ax=ax, color=sns.color_palette('mako', len(feat_series)))
+ax.set_xlabel('Mean importance (RF + GB)')
+ax.set_title('Feature Importance — Tree-Based Learners')
+plt.tight_layout()
+plt.savefig(os.path.join(ASSETS_DIR, 'feature_importance.png'), dpi=150, bbox_inches='tight')
+plt.close(fig)
+
+# 5. Skew time series with detected jump days overlaid
+ts = (merged_data
+      .dropna(subset=['Date'])
+      .groupby('Date')
+      .agg(skew=('Δs_Pdo_o', 'mean'),
+           jump=('Jump', 'max'))
+      .reset_index()
+      .sort_values('Date'))
+fig, ax = plt.subplots(figsize=(13, 5.5))
+ax.plot(ts['Date'], ts['skew'], color='#1f77b4', linewidth=1.4, label='Put-skew slope $\\Delta s_{Pdo,o}$')
+jumps = ts[ts['jump'] == 1]
+ax.scatter(jumps['Date'], jumps['skew'], color='#d62728', s=38, zorder=3,
+           label=f'Detected downturn ({len(jumps)} days)')
+ax.set_xlabel('Date')
+ax.set_ylabel('IV skew (slope)')
+ax.set_title('Put-Skew Slope with Lee–Mykland Jump Events')
+ax.legend(loc='upper right')
+plt.tight_layout()
+plt.savefig(os.path.join(ASSETS_DIR, 'skew_jumps.png'), dpi=150, bbox_inches='tight')
+plt.close(fig)
+
+print(f"Saved 5 plots to {ASSETS_DIR}")
 
 # Final Market Prediction Pipeline
 
