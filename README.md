@@ -4,6 +4,9 @@ A HFT pipeline to detect next-day market downturns using delta-segmented implied
 
 > Original research & [paper](./paper.pdf) produced at Dartmouth Economics Department with Prof. John Welborn & advisory from Prof. Victor Van Erp.
 
+<img width="1896" height="771" alt="image" src="https://github.com/user-attachments/assets/914afd49-c1a6-425e-9cdf-8b72d0078b93" />
+
+
 ---
 
 ## Abstract
