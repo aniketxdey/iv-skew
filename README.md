@@ -1,6 +1,6 @@
-# Detecting Downturns in Equity ETFs with Implied Volatility Analysis
+# Detecting Downturns in Equity ETFs with Implied Volatility Skew
 
-A HFT pipeline to detect next-day market downturns using delta-segmented implied volatility features. Backtested on QQQ options from Q1 2020 to Q2 2024, the current implementation centers on an ensemble classifier built from logistic regression, random forest, gradient boosting, and a small PyTorch neural network.
+Detecting next-day tech sector downturns (Lee-Mykland non-parameteric jups) using 25-delta implied volatility skew. Backtested on QQQ options from Q1 2020 to Q2 2024. Ensemble classifier with logistic regression, random forest, gradient boosting, and a PyTorch NN.
 
 > Original research & [paper](./paper.pdf) produced at Dartmouth Economics Department with Prof. John Welborn & advisory from Prof. Victor Van Erp.
 
@@ -11,8 +11,7 @@ A HFT pipeline to detect next-day market downturns using delta-segmented implied
 
 ## Abstract
 
-Implied volatility (IV) skew captures investors’ perceptions of crash risk by reflecting higher im-plied volatilities for deep out-of-the-money (DOTM) puts compared to options closer to at-the-money
-(ATM). This project rigorously evaluates the predictive strength of IV skew metrics during the turbulent 2020–2024 period, which spans the COVID-19 crash, the 2020–2021 recovery, and the 2022 tech correction. Rather than relying on broad skew measures, we segment put options by precise delta thresholds to isolate hedging demand for extreme downturns from general volatility expectations. We evaluate two skew metrics: a slope (DOTM–OTM IV difference) and a curvature (DOTM–ATM IV difference) measure. Both are statistically significant predictors of next-day downturns, and the ensemble classifier built on top of them achieves AUC = 0.91, Precision = 89%, Recall = 72%, with end-to-end ETL latency under 50 ms.
+Implied volatility (IV) skew captures investors’ perceptions of crash risk by reflecting higher im-plied volatilities for deep out-of-the-money (DOTM) puts compared to options closer to at-the-money (ATM). This project rigorously evaluates the predictive strength of IV skew metrics during the turbulent 2020–2024 period, which spans the COVID-19 crash, the 2020–2021 recovery, and the 2022 tech correction. Rather than relying on broad skew measures, we segment put options by delta thresholds to isolate hedging demand for extreme downturns from general volatility expectations. We evaluate two skew metrics: a slope (DOTM–OTM IV difference) and a curvature (DOTM–ATM IV difference) measure. Both are statistically significant predictors of next-day downturns, and the ensemble classifier built on top of them achieves AUC = 0.91, Precision = 89%, Recall = 72%, with end-to-end ETL latency under 50 ms.
 
 ---
 
