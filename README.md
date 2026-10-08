@@ -8,51 +8,30 @@
 
 ## Introduction
 
-Implied volatility skew has been known to systematically capture investors’ perceptions of crash risk by reflecting higher implied volatilities for deep puts comparable to their call counterparts. This manifested after the 1987 equity-market crash, before which, option pricing was often discussed using a relatively flat volatility assumption across strikes. After the crash, investors were increasingly willing to pay for out-of-the-money puts that protected against severe losses raising the prices of downside puts. When those prices are translated back into implied volatility, downside puts trade at higher implied volatility than comparable upside calls. That asymmetric option surface is the skew illustrated in the chart on the right.
-
-Options closer to at-the-money (ATM). 
-
-This project rigorously evaluates the predictive strength of IV skew metrics during the turbulent 2020–2024 period, which spans the COVID-19 crash, the 2020–2021 recovery, and the 2022 tech correction. Rather than relying on broad skew measures, we segment put options by delta thresholds to isolate hedging demand for extreme downturns from general volatility expectations. We evaluate two skew metrics: a slope (DOTM–OTM IV difference) and a curvature (DOTM–ATM IV difference) measure. Both are statistically significant predictors of next-day downturns, and the ensemble classifier built on top of them achieves AUC = 0.91, Precision = 89%, Recall = 72%, with end-to-end ETL latency under 50 ms.
-
-
-
-The chart also locates the three parts of the surface used in the study. ATM implied volatility measures the overall level of option-implied uncertainty. The 25-delta risk reversal compares a moderately out-of-the-money put with a comparable call, while the 10-delta measure goes further into the wing and captures more extreme tail pricing.
-
-The structural explanation is hedging demand. Asset owners value protection against severe losses, while dealers and investors supplying that protection require compensation for carrying the opposite tail exposure. Downside insurance can therefore remain persistently expensive.
-
-That leads to the risk-premium hypothesis. Especially expensive downside protection may indicate that investors are temporarily paying too much for fear, or that the asset genuinely carries more downside risk and therefore requires higher subsequent compensation. Under either explanation, relative put richness may contain information about future underlying returns.
-
-The experiment tests whether that predictive relationship exists. It does not attempt to distinguish conclusively among hedging demand, dealer constraints, temporary mispricing, and compensation for genuine crash risk.
-
-The next challenge is scaling the signal: can an option-market relationship observed for one underlying survive when it is converted into a relative macro strategy?
+Implied volatility skew reflects how option prices vary across strikes and can reveal the market price of downside protection. This study asks whether delta-segmented, moment-based measures of risk-neutral skew are associated with next-day downside jumps in technology-sector ETFs during the volatile 2020–2024 period. Risk-neutral moments are calculated from an SVI-parameterized volatility surface following Bakshi, Kapadia, and Madan (2003). Delta restrictions then focus the measures on selected regions of the surface: a put-side slope signal near the 10-delta wing and a curvature signal spanning the 25-delta put and call regions. We label downside jumps using a daily adaptation of the Lee–Mykland statistic and evaluate each signal in a separate logistic regression with market controls. Both signals have positive, statistically significant coefficients, and the curvature model attains a peak AUC of 0.91 in prediction accuracy for the labeled downturn events. 
 
 ---
 
 ## Methodology
 
 ### 1. Data ingestion
-- End-of-day QQQ option quotes and Greeks, Q1 2020 – Q2 2024 (~1.77M records).
-- Underlying QQQ price series used to label downturn days.
-- Filters applied: `0.05 < IV < 2.0`, `7 ≤ DTE ≤ 180`, non-null deltas.
+The dataset contains end-of-day QQQ option quotes and Greeks from Q1 2020 through Q2 2024, totaling approximately 1.77 million records. We pair the options data with QQQ closing prices to construct the downside-jump label. The sample retains quotes with `0.05 < IV < 2.0`, 7 to 180 days to expiration, and non-null deltas.
 
-### 2. Skew Signals
-To define skew as a metric, we use Gatheral et al. e propose two novel skew signals metrics are computed from bucket-mean IVs 
+### 2. Skew & control features (per quote-date × expiry)
+We smooth the implied volatility surface with an SVI parameterization and compute risk-neutral moments following Bakshi, Kapadia, and Madan (2003). Applying delta restrictions to the moment-based skew combines information from the risk-neutral distribution with the concentration of option pricing in selected regions of the surface.
 
-- **Slope:** \(\displaystyle \Delta s_{Pdo,o} = \overline{IV}_{\mathrm{DOTM}} - \overline{IV}_{\mathrm{OTM}}\)
-- **Curvature:** \(\displaystyle \Delta s_{Pdo,a} = \overline{IV}_{\mathrm{DOTM}} - \overline{IV}_{\mathrm{ATM}}\)
+| Signal | Delta region | Interpretation |
+|---|---|---|
+| Slope | Put side, from ATM to the 10-delta wing (`−0.10 ≤ Δ < 0`) | Measures risk-neutral skew variation across the left-side put region. |
+| Curvature | 25-delta put and call region (`−0.25 ≤ Δ ≤ 0.25`) | Measures risk-neutral skew curvature across the conventional risk-reversal region. |
 
-Per-group controls: ATM IV (near-ATM puts), mean put bid-ask spread, total put volume, and DTE.
+The slope and curvature signals are moment-based measures computed from risk-neutral prices within these delta regions. The regressions control for at-the-money implied volatility, mean bid–ask spread, and option volume.
 
 ### 3. Jump target (next-day downturn proxy)
-- Daily log returns from underlying close.
-- Lee–Mykland-style T-stat on a 30-day rolling vol; a day is labeled a jump if `T < −3` (99% confidence).
+We calculate daily log returns from the underlying closing prices and standardize them using a 30-day rolling volatility estimate. A downside event is labeled when the resulting Lee–Mykland-style statistic falls below `−3`. This daily implementation serves as the study’s jump target.
 
 ### 4. ETL & feature engineering
-- Merge skew features with the market series on quote date.
-- **Delta-neutralization** of skew vs. contemporaneous returns via 30-day rolling beta.
-- **STL decomposition** of the skew time series into trend / seasonal / residual components.
-- **Volatility regimes** from rolling-std terciles (low / medium / high) plus a regime-transition flag.
-- **Interactions & momentum:** `skew × ATM_IV`, `curvature × ATM_IV`, `regime × skew`, trend/residual ratio, 5-day and 20-day skew momentum.
+We align each date’s option-derived signals and controls with the market series by quote date, then pair them with the next-day jump label. This timing makes the skew measures precede the event they are used to explain.
 
 ### 5. Ensemble model
 - Base learners: logistic regression, random forest, gradient boosting, PyTorch NN (4-layer MLP with batch norm and dropout).
@@ -61,16 +40,10 @@ Per-group controls: ATM IV (near-ATM puts), mean put bid-ask spread, total put v
 - Decision threshold chosen by maximizing `TPR − FPR` on the validation ROC curve.
 
 ### 6. Outputs
-- Per-model AUCs and ensemble weights.
-- Ensemble AUC, precision, recall.
-- Final downturn probability and decision for the most recent date.
-- End-to-end ETL latency (ms) for the custom data batch.
+The paper reports each signal’s coefficient and statistical significance, along with model fit statistics and ROC performance. Both specifications attain an AUC of 0.91 in the reported evaluation.
 
----
 
-## How to Use
-
-### Reproduce the research
+## Deployment
 The full research workflow (data exploration, skew construction, logistic regression tables, ROC curves, and figures used in the paper) lives in `models/final_research.ipynb`. To reproduce:
 
 ```bash
@@ -80,25 +53,7 @@ pip install -r requirements.txt
 jupyter notebook models/final_research.ipynb
 ```
 
-Run the cells top-to-bottom. The notebook expects the QQQ options dataset at `data/qqq_2020_2022.csv`.
-
-### Deploy the pipeline
-`models/hft_pipeline.py` is the production-style script: it runs the full ETL, trains the ensemble, and prints a downturn probability and decision for the most recent date.
-
-```bash
-python models/hft_pipeline.py
-```
-
-To adapt the pipeline to a custom ticker or dataset, edit the following in `models/hft_pipeline.py`:
-
-1. **Dataset path & schema** — update the `pd.read_csv(...)` call and the `rename_dict` to match your data's column names (the defaults are for the CBOE-style QQQ export).
-2. **Delta buckets** — adjust the thresholds in `calculate_skew_measures` (`-0.25`, `-0.15`, `-0.05`) if your underlying has a different skew shape (e.g. single names vs. indices).
-3. **DTE filter** — change the `(df['DTE'] >= 7) & (df['DTE'] <= 180)` filter to match the maturity range you care about.
-4. **Jump detection** — tune the `window` and `critical` arguments in `detect_jumps(...)` to change the lookback and significance threshold (default `T < -3.0`, ~99% confidence).
-5. **Class balancing** — update `target_size`, `majority_target`, and `minority_target` to match the size and base rate of your resampled set.
-6. **Model hyperparameters** — random forest / gradient boosting / NN hyperparameters are all defined inline in the ensemble section and can be swapped without affecting the ETL.
-
-Everything downstream (STL decomposition, regime features, delta-neutralization, ensemble weighting, threshold selection) is ticker-agnostic and will work as long as the column names and skew buckets are set correctly.
+Run the cells top-to-bottom. The notebook expects the QQQ options dataset at `data/qqq_2020_2022.csv`, however, everything downstream (STL decomposition, regime features, delta-neutralization, ensemble weighting, threshold selection) is ticker-agnostic and will work as long as the column names and skew buckets are set correctly.
 
 ---
 
