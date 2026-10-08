@@ -1,6 +1,6 @@
 # Detecting Downturns in Equity ETFs with Implied Volatility Skew
 
-Detecting next-day tech sector downturns (Lee-Mykland non-parameteric jups) using 25-delta implied volatility skew. Backtested on QQQ options from Q1 2020 to Q2 2024. Ensemble classifier with logistic regression, random forest, gradient boosting, and a PyTorch NN.
+Detecting next-day tech sector downturns (Lee-Mykland non-parameteric jumps) using custom implied volatility skew signals. Backtested on QQQ options from Q1 2020 to Q2 2024. Ensemble classifier with logistic regression, random forest, gradient boosting, and a PyTorch NN.
 
 > Original research & [paper](./paper.pdf) produced at Dartmouth Economics Department with Prof. John Welborn & advisory from Prof. Victor Van Erp.
 
@@ -22,8 +22,8 @@ Implied volatility (IV) skew captures investors’ perceptions of crash risk by 
 - Underlying QQQ price series used to label downturn days.
 - Filters applied: `0.05 < IV < 2.0`, `7 ≤ DTE ≤ 180`, non-null deltas.
 
-### 2. Skew & control features (per quote-date × expiry)
-Put options are bucketed by delta:
+### 2. Skew Features (per quote-dlate × expiry)
+We propose two novel skew signals:
 
 | Bucket | Delta range |
 |---|---|
