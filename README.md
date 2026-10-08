@@ -1,6 +1,6 @@
-# Detecting Downturns in Equity ETFs with Implied Volatility Skew
+# Detecting Downturns in Equity ETFs with Deep Learning & Implied Volatility Skew
 
-Detecting next-day tech sector downturns (Lee-Mykland non-parameteric jumps) using custom implied volatility skew signals. Backtested on QQQ options from Q1 2020 to Q2 2024. Ensemble classifier with logistic regression, random forest, gradient boosting, and a PyTorch NN.
+Detecting next-day tech sector downturns using custom implied volatility skew signals and an ensemble ML classifier.
 
 > Original research & [paper](./paper.pdf) produced at Dartmouth Economics Department with Prof. John Welborn & advisory from Prof. Victor Van Erp.
 
@@ -9,9 +9,25 @@ Detecting next-day tech sector downturns (Lee-Mykland non-parameteric jumps) usi
 
 ---
 
-## Abstract
+## Introduction
 
-Implied volatility (IV) skew captures investors’ perceptions of crash risk by reflecting higher im-plied volatilities for deep out-of-the-money (DOTM) puts compared to options closer to at-the-money (ATM). This project rigorously evaluates the predictive strength of IV skew metrics during the turbulent 2020–2024 period, which spans the COVID-19 crash, the 2020–2021 recovery, and the 2022 tech correction. Rather than relying on broad skew measures, we segment put options by delta thresholds to isolate hedging demand for extreme downturns from general volatility expectations. We evaluate two skew metrics: a slope (DOTM–OTM IV difference) and a curvature (DOTM–ATM IV difference) measure. Both are statistically significant predictors of next-day downturns, and the ensemble classifier built on top of them achieves AUC = 0.91, Precision = 89%, Recall = 72%, with end-to-end ETL latency under 50 ms.
+Implied volatility skew has been known to systematically capture investors’ perceptions of crash risk by reflecting higher implied volatilities for deep puts comparable to their call counterparts. This manifested after the 1987 equity-market crash, before which, option pricing was often discussed using a relatively flat volatility assumption across strikes. After the crash, investors were increasingly willing to pay for out-of-the-money puts that protected against severe losses raising the prices of downside puts. When those prices are translated back into implied volatility, downside puts trade at higher implied volatility than comparable upside calls. That asymmetric option surface is the skew illustrated in the chart on the right.
+
+Options closer to at-the-money (ATM). 
+
+This project rigorously evaluates the predictive strength of IV skew metrics during the turbulent 2020–2024 period, which spans the COVID-19 crash, the 2020–2021 recovery, and the 2022 tech correction. Rather than relying on broad skew measures, we segment put options by delta thresholds to isolate hedging demand for extreme downturns from general volatility expectations. We evaluate two skew metrics: a slope (DOTM–OTM IV difference) and a curvature (DOTM–ATM IV difference) measure. Both are statistically significant predictors of next-day downturns, and the ensemble classifier built on top of them achieves AUC = 0.91, Precision = 89%, Recall = 72%, with end-to-end ETL latency under 50 ms.
+
+
+
+The chart also locates the three parts of the surface used in the study. ATM implied volatility measures the overall level of option-implied uncertainty. The 25-delta risk reversal compares a moderately out-of-the-money put with a comparable call, while the 10-delta measure goes further into the wing and captures more extreme tail pricing.
+
+The structural explanation is hedging demand. Asset owners value protection against severe losses, while dealers and investors supplying that protection require compensation for carrying the opposite tail exposure. Downside insurance can therefore remain persistently expensive.
+
+That leads to the risk-premium hypothesis. Especially expensive downside protection may indicate that investors are temporarily paying too much for fear, or that the asset genuinely carries more downside risk and therefore requires higher subsequent compensation. Under either explanation, relative put richness may contain information about future underlying returns.
+
+The experiment tests whether that predictive relationship exists. It does not attempt to distinguish conclusively among hedging demand, dealer constraints, temporary mispricing, and compensation for genuine crash risk.
+
+The next challenge is scaling the signal: can an option-market relationship observed for one underlying survive when it is converted into a relative macro strategy?
 
 ---
 
@@ -22,16 +38,8 @@ Implied volatility (IV) skew captures investors’ perceptions of crash risk by 
 - Underlying QQQ price series used to label downturn days.
 - Filters applied: `0.05 < IV < 2.0`, `7 ≤ DTE ≤ 180`, non-null deltas.
 
-### 2. Skew Features (per quote-dlate × expiry)
-
-
-| Bucket | Delta range |
-|---|---|
-| Deep OTM (DOTM) | `Δ ≤ −0.25` |
-| OTM             | `−0.25 < Δ ≤ −0.15` |
-| ATM             | `−0.15 < Δ ≤ −0.05` |
-
- We propose two novel skew signals metrics are computed from bucket-mean IVs:
+### 2. Skew Signals
+To define skew as a metric, we use Gatheral et al. e propose two novel skew signals metrics are computed from bucket-mean IVs 
 
 - **Slope:** \(\displaystyle \Delta s_{Pdo,o} = \overline{IV}_{\mathrm{DOTM}} - \overline{IV}_{\mathrm{OTM}}\)
 - **Curvature:** \(\displaystyle \Delta s_{Pdo,a} = \overline{IV}_{\mathrm{DOTM}} - \overline{IV}_{\mathrm{ATM}}\)
