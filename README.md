@@ -33,8 +33,8 @@ Put options are bucketed by delta:
 
 Two skew metrics are computed from bucket-mean IVs:
 
-- **Slope:** $\Delta s_{Pdo,o} = \overline{IV}_{\text{DOTM}} - \overline{IV}_{\text{OTM}}$
-- **Curvature:** $\Delta s_{Pdo,a} = \overline{IV}_{\text{DOTM}} - \overline{IV}_{\text{ATM}}$
+- **Slope:** $\Delta s_{Pdo,o} = \overline{IV}_{\mathrm{DOTM}} - \overline{IV}_{\mathrm{OTM}}$
+- **Curvature:** $\Delta s_{Pdo,a} = \overline{IV}_{\mathrm{DOTM}} - \overline{IV}_{\mathrm{ATM}}$
 
 Per-group controls: ATM IV (near-ATM puts), mean put bid-ask spread, total put volume, and DTE.
 
