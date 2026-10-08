@@ -23,7 +23,7 @@ Implied volatility (IV) skew captures investors’ perceptions of crash risk by 
 - Filters applied: `0.05 < IV < 2.0`, `7 ≤ DTE ≤ 180`, non-null deltas.
 
 ### 2. Skew Features (per quote-dlate × expiry)
-We propose two novel skew signals:
+
 
 | Bucket | Delta range |
 |---|---|
@@ -31,10 +31,10 @@ We propose two novel skew signals:
 | OTM             | `−0.25 < Δ ≤ −0.15` |
 | ATM             | `−0.15 < Δ ≤ −0.05` |
 
-Two skew metrics are computed from bucket-mean IVs:
+ We propose two novel skew signals metrics are computed from bucket-mean IVs:
 
-- **Slope:** $\Delta s_{Pdo,o} = \overline{IV}_{\mathrm{DOTM}} - \overline{IV}_{\mathrm{OTM}}$
-- **Curvature:** $\Delta s_{Pdo,a} = \overline{IV}_{\mathrm{DOTM}} - \overline{IV}_{\mathrm{ATM}}$
+- **Slope:** \(\displaystyle \Delta s_{Pdo,o} = \overline{IV}_{\mathrm{DOTM}} - \overline{IV}_{\mathrm{OTM}}\)
+- **Curvature:** \(\displaystyle \Delta s_{Pdo,a} = \overline{IV}_{\mathrm{DOTM}} - \overline{IV}_{\mathrm{ATM}}\)
 
 Per-group controls: ATM IV (near-ATM puts), mean put bid-ask spread, total put volume, and DTE.
 
