@@ -8,7 +8,11 @@
 
 ## Introduction
 
-Implied volatility skew reflects how option prices vary across strikes and can reveal the market price of downside protection. This study asks whether delta-segmented, moment-based measures of risk-neutral skew are associated with next-day downside jumps in technology-sector ETFs during the volatile 2020–2024 period. Risk-neutral moments are calculated from an SVI-parameterized volatility surface following Bakshi, Kapadia, and Madan (2003). Delta restrictions then focus the measures on selected regions of the surface: a put-side slope signal near the 10-delta wing and a curvature signal spanning the 25-delta put and call regions. We label downside jumps using a daily adaptation of the Lee–Mykland statistic and evaluate each signal in a separate logistic regression with market controls. Both signals have positive, statistically significant coefficients, and the curvature model attains a peak AUC of 0.91 in prediction accuracy for the labeled downturn events. 
+Implied volatility skew, the phenomenon where deep out-of-the-money puts have significant higher implied volatility compared to their call counterparts, has been often thought to broadly capture investors' perception of incoming downturns. This study tests the "crash risk" hypothesis, investigating whether skew serves as a predictor for next-day downside jumps in volatile equity markets. We focus specifically on the technology sector through ETFs, known for their heightened volatility and crash risk in recent years.
+
+To measure skew, we first calculate risk-neutral moments from an SVI-parameterized volatility surface following Bakshi, Kapadia, and Madan (2003). We then apply delta restrictions to construct two novel signals consistent with literature that focuses the measure on information-region regions of the surface: a put-side "slope" signal near the 10-delta wing and a "curvature" signal spanning the 25-delta put and call regions. We label downside jumps using a daily adaptation of the Lee–Mykland statistic and evaluate each signal in an ensemble classifier built from logistic regression, random forest, gradient boosting, and a small PyTorch neural network. 
+
+Logistic regression models consistently outperformed: both signals have positive, statistically significant coefficients, and the curvature model attains a peak AUC of 0.91 in prediction accuracy for the labeled downturn events. 
 
 ---
 
