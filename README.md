@@ -26,7 +26,7 @@ We smooth the implied volatility surface with an SVI parameterization and comput
 
 | Signal | Delta region | Interpretation |
 |---|---|---|
-| Slope | Put side, from ATM to the 10-delta wing (`−0.10 ≤ Δ < 0`) | Measures risk-neutral skew variation across the left-side put region. |
+| Slope | Put side, from ATM to the 1-delta wing (`-1.0 ≤ Δ < 0`) | Measures risk-neutral skew variation across the left-side put region. |
 | Curvature | 25-delta put and call region (`−0.25 ≤ Δ ≤ 0.25`) | Measures risk-neutral skew curvature across the conventional risk-reversal region. |
 
 The slope and curvature signals are moment-based measures computed from risk-neutral prices within these delta regions. The regressions control for at-the-money implied volatility, mean bid–ask spread, and option volume.
