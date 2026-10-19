@@ -10,7 +10,7 @@
 
 Implied volatility skew, the phenomenon where deep out-of-the-money puts have significant higher implied volatility compared to their call counterparts, has been often thought to broadly capture investors' perception of incoming downturns. This study tests the "crash risk" hypothesis, investigating whether skew serves as a predictor for next-day downside jumps in volatile equity markets. We focus specifically on the technology sector through ETFs, known for their heightened volatility and crash risk in recent years.
 
-To measure skew, we first calculate risk-neutral moments from an SVI-parameterized volatility surface following Bakshi, Kapadia, and Madan (2003). We then apply delta restrictions to construct two novel signals consistent with literature that focuses the measure on information-region regions of the surface: a put-side "slope" signal near the 10-delta wing and a "curvature" signal spanning the 25-delta put and call regions. We label downside jumps using a daily adaptation of the Lee–Mykland statistic and evaluate each signal in an ensemble classifier built from logistic regression, random forest, gradient boosting, and a small PyTorch neural network. 
+To measure skew, we first calculate risk-neutral moments from an SVI-parameterized volatility surface following Bakshi, Kapadia, and Madan (2003). We then apply delta restrictions to construct two novel signals consistent with literature that focuses the measure on information-rich regions of the surface: a put-side "slope" signal near the 10-delta wing and a "curvature" signal spanning the 25-delta put and call regions. We label downside jumps using a daily adaptation of the Lee–Mykland statistic and evaluate each signal in an ensemble classifier built from logistic regression, random forest, gradient boosting, and a small PyTorch neural network. 
 
 Logistic regression models consistently outperformed: both signals have positive, statistically significant coefficients, and the curvature model attains a peak AUC of 0.91 in prediction accuracy for the labeled downturn events. 
 
@@ -26,7 +26,7 @@ We smooth the implied volatility surface with an SVI parameterization and comput
 
 | Signal | Delta region | Interpretation |
 |---|---|---|
-| Slope | Put side, from ATM to the 10-delta wing (`−0.10 ≤ Δ < 0`) | Measures risk-neutral skew variation across the left-side put region. |
+| Slope | Put side, from ATM to the 1-delta wing (`-1.0 ≤ Δ < 0`) | Measures risk-neutral skew variation across the left-side put region. |
 | Curvature | 25-delta put and call region (`−0.25 ≤ Δ ≤ 0.25`) | Measures risk-neutral skew curvature across the conventional risk-reversal region. |
 
 The slope and curvature signals are moment-based measures computed from risk-neutral prices within these delta regions. The regressions control for at-the-money implied volatility, mean bid–ask spread, and option volume.
